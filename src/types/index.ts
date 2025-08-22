@@ -122,3 +122,44 @@ export const DAILY_TASK_REWARDS = {
   gameAttempted: 50,
   newsRead: 50
 } as const;
+
+// Affiliate types
+export interface Affiliate {
+  id: string;
+  userId: string;
+  referralCode: string;
+  commissionRate: number;
+  totalEarnings: number;
+  status: 'active' | 'inactive' | 'suspended';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AffiliateClick {
+  id: string;
+  affiliateId: string;
+  ipAddress?: string;
+  userAgent?: string;
+  referrer?: string;
+  createdAt: string;
+}
+
+export interface AffiliateConversion {
+  id: string;
+  affiliateId: string;
+  userId?: string;
+  conversionType: 'signup' | 'purchase';
+  orderValue?: number;
+  commissionAmount: number;
+  status: 'pending' | 'approved' | 'paid';
+  createdAt: string;
+}
+
+export interface AffiliateStats {
+  totalClicks: number;
+  totalSignups: number;
+  totalPurchases: number;
+  totalEarnings: number;
+  pendingEarnings: number;
+  conversionRate: number;
+}

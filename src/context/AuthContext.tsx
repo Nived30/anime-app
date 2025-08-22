@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User, Purchase, Activity, TIER_THRESHOLDS, DAILY_TASK_REWARDS, DailyTasks } from '../types';
 import { supabase } from '../lib/supabase';
+import { trackAffiliateConversion } from '../lib/affiliate';
 
 interface AuthContextType {
   user: User | null;
@@ -248,6 +249,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const addPurchase = useCallback(async (purchase: Purchase) => {
     if (!user) return;
 
+    // Track affiliate conversion for purchase
+    try {
+      await trackAffiliateConversion(user.id, 'purchase', purchase.total);
+    } catch (error) {
+      console.error('Error tracking affiliate purchase:', error);
+    }
+
     setUser(prev => {
       if (!prev) return null;
 
@@ -298,6 +306,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('Registration error:', error);
       throw new Error(error.message || 'Registration failed');
+    } finally {
+      // Track affiliate conversion for signup
+      if (authUser) {
+        try {
+          await trackAffiliateConversion(authUser.id, 'signup');
+        } catch (error) {
+          console.error('Error tracking affiliate signup:', error);
+        }
+      }
     }
   }, []);
 

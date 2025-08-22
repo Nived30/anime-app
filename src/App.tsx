@@ -11,6 +11,8 @@ import { AdminDashboard } from './pages/admin/Dashboard';
 import { Login } from './pages/Login';
 import { AnimeNewsPage } from './pages/AnimeNews';
 import { AnimeNewsDetails } from './pages/AnimeNewsDetails';
+import { AffiliateTracker } from './pages/AffiliateTracker';
+import { ReferralLanding } from './pages/ReferralLanding';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
@@ -33,6 +35,8 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/anime-news" element={<AnimeNewsPage />} />
                 <Route path="/anime-news/:id" element={<AnimeNewsDetails />} />
+                <Route path="/affiliate" element={<AffiliateTracker />} />
+                <Route path="/ref/:code" element={<ReferralLanding />} />
               </Routes>
             </main>
           </div>
