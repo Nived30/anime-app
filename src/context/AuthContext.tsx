@@ -60,6 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        // Check for demo user first
+        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+          const demoUser = localStorage.getItem('demoUser');
+          if (demoUser) {
+            setUser(JSON.parse(demoUser));
+          }
+          return;
+        }
+        
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const totalPoints = await getTotalPoints(session.user.id);
@@ -150,6 +159,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
+      // Demo mode - update local storage
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        const newPoints = user.points + pointChange;
+        const newTier = calculateTier(newPoints);
+        
+        const activity: Activity = {
+          id: Math.random().toString(36).substr(2, 9),
+          type: pointChange > 0 ? 'points_earned' : 'points_spent',
+          description: pointChange > 0 
+            ? `Earned ${pointChange} points${gameType !== 'purchase' ? ` from ${gameType}` : ''}`
+            : `Spent ${Math.abs(pointChange)} points on purchase`,
+          date: new Date().toISOString(),
+          points: Math.abs(pointChange),
+          gameType
+        };
+        
+        const updatedUser = {
+          ...user,
+          points: newPoints,
+          tier: newTier,
+          activities: [activity, ...user.activities]
+        };
+        
+        setUser(updatedUser);
+        localStorage.setItem('demoUser', JSON.stringify(updatedUser));
+        return;
+      }
+      
       const mappedGameType = gameType === 'task_completed' ? 'task_completed' :
                            gameType === 'reading' ? 'reading' :
                            gameType === 'reaction' ? 'reaction' :
@@ -276,11 +313,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(async (email: string, password: string) => {
     try {
+      // Check if we're in demo mode (no Supabase connection)
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        // Demo mode - create mock user
+        const mockUser = {
+          id: Math.random().toString(36).substr(2, 9),
+          email,
+          created_at: new Date().toISOString()
+        };
+        
+        const userProfile: User = {
+          id: mockUser.id,
+          name: email.split('@')[0],
+          email: mockUser.email,
+          points: 100, // Welcome bonus
+          tier: 'bronze',
+          purchases: [],
+          activities: [{
+            id: Math.random().toString(36).substr(2, 9),
+            type: 'points_earned',
+            description: 'Welcome bonus points',
+            date: new Date().toISOString(),
+            points: 100
+          }],
+          dailyTasks: {
+            lastUpdated: new Date().toDateString(),
+            tasks: {
+              purchase: false,
+              gameAttempted: false,
+              newsRead: false
+            }
+          }
+        };
+        
+        setUser(userProfile);
+        localStorage.setItem('demoUser', JSON.stringify(userProfile));
+        return;
+      }
+
       const { data: { user: authUser }, error } = await supabase.auth.signUp({
         email,
         password,
       });
-
       if (error) throw error;
       if (!authUser) throw new Error('Registration failed: No user returned');
 
@@ -320,11 +394,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
+      // Check if we're in demo mode (no Supabase connection)
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        // Demo mode - check for existing demo user or create one
+        const existingUser = localStorage.getItem('demoUser');
+        if (existingUser) {
+          const userProfile = JSON.parse(existingUser);
+          setUser(userProfile);
+          return;
+        }
+        
+        // Create new demo user
+        const userProfile: User = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: email.split('@')[0],
+          email: email,
+          points: 100,
+          tier: 'bronze',
+          purchases: [],
+          activities: [{
+            id: Math.random().toString(36).substr(2, 9),
+            type: 'points_earned',
+            description: 'Welcome bonus points',
+            date: new Date().toISOString(),
+            points: 100
+          }],
+          dailyTasks: {
+            lastUpdated: new Date().toDateString(),
+            tasks: {
+              purchase: false,
+              gameAttempted: false,
+              newsRead: false
+            }
+          }
+        };
+        
+        setUser(userProfile);
+        localStorage.setItem('demoUser', JSON.stringify(userProfile));
+        return;
+      }
+
       const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-
       if (error) throw error;
       if (!authUser) throw new Error('Login failed: No user returned');
 
@@ -358,6 +471,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      // Demo mode - clear local storage
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        localStorage.removeItem('demoUser');
+        setUser(null);
+        return;
+      }
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);

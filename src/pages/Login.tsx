@@ -39,72 +39,15 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      if (!navigator.onLine) {
-        throw new Error('No internet connection. Please check your network and try again.');
+      if (isRegistering) {
+        await register(email, password);
+      } else {
+        await login(email, password);
       }
-
-      const maxRetries = 3;
-      let retryCount = 0;
-      let lastError: Error | null = null;
-
-      while (retryCount < maxRetries) {
-        try {
-          if (isRegistering) {
-            await register(email, password);
-          } else {
-            await login(email, password);
-          }
-          navigate('/dashboard');
-          return;
-        } catch (err: any) {
-          lastError = err;
-          
-          // Don't retry for validation/credential errors
-          if (err.message?.includes('Invalid login credentials') ||
-              err.message?.includes('User already registered') ||
-              err.message?.includes('Email not confirmed') ||
-              err.message?.includes('invalid_credentials')) {
-            throw err;
-          }
-
-          // Retry for network-related errors
-          if (err.name === 'AuthRetryableFetchError' || 
-              err.message?.includes('Failed to fetch') ||
-              err.message?.includes('Network Error')) {
-            retryCount++;
-            if (retryCount < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-              continue;
-            }
-          }
-          throw err;
-        }
-      }
-
-      if (lastError) {
-        throw lastError;
-      }
+      navigate('/dashboard');
     } catch (err: any) {
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-
-      if (err.message?.includes('Failed to fetch') || 
-          err.name === 'AuthRetryableFetchError' ||
-          err.message?.includes('Network Error')) {
-        errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
-      } else if (err.message?.includes('Invalid login credentials') || 
-                 err.message?.includes('invalid_credentials')) {
-        errorMessage = isRegistering 
-          ? 'Unable to create account. Please try a different email.'
-          : 'Invalid email or password. Please try again.';
-      } else if (err.message?.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address before logging in.';
-      } else if (err.message?.includes('User already registered')) {
-        errorMessage = 'An account with this email already exists. Please try logging in instead.';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
+      console.error(isRegistering ? 'Registration error:' : 'Login error:', err);
+      setError(err.message || 'Authentication failed. Please try again.');
       console.error(isRegistering ? 'Registration error:' : 'Login error:', err);
     } finally {
       setIsLoading(false);
