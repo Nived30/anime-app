@@ -25,7 +25,7 @@ export function AffiliateTracker() {
   const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [conversions, setConversions] = useState<AffiliateConversion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
 
