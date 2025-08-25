@@ -21,13 +21,25 @@ import {
 import type { Affiliate, AffiliateStats, AffiliateConversion } from '../types';
 
 export function AffiliateTracker() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [conversions, setConversions] = useState<AffiliateConversion[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  // Show loading while auth is initializing
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (user) {

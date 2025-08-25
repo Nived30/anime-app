@@ -6,11 +6,10 @@ import { Lock, Mail, AlertCircle } from 'lucide-react';
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, loading } = useAuth();
 
   const validateForm = () => {
     if (!email || !password) {
@@ -36,8 +35,6 @@ export function Login() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       if (isRegistering) {
         await register(email, password);
@@ -49,8 +46,6 @@ export function Login() {
       console.error(isRegistering ? 'Registration error:' : 'Login error:', err);
       setError(err.message || 'Authentication failed. Please try again.');
       console.error(isRegistering ? 'Registration error:' : 'Login error:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -132,10 +127,10 @@ export function Login() {
           <div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="flex items-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
